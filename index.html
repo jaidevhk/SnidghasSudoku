@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Snigdha's Sudoku</h1>
+            <div class="header-controls">
+                <button id="new-game" class="btn btn-primary">New Game</button>
+                <button id="scores-btn" class="btn btn-secondary">Scores</button>
+                <button id="settings-btn" class="btn btn-settings" title="Settings">⚙️</button>
+            </div>
+        </header>
+
+        <main>
+            <div class="game-info">
+                <div class="timer">Time: <span id="timer">00:00</span></div>
+                <div class="difficulty-display"><span id="current-difficulty">9x9 - Hard</span></div>
+            </div>
+
+            <div class="sudoku-container">
+                <div id="sudoku-grid" class="sudoku-grid"></div>
+            </div>
+
+            <div class="game-controls">
+                <button id="hint-btn" class="btn btn-hint">Hint</button>
+                <button id="check-btn" class="btn btn-check">Check</button>
+                <button id="solve-btn" class="btn btn-solve">Solve</button>
+            </div>
+        </main>
+
+        <!-- New Game Setup Modal -->
+        <div id="setup-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>New Game Setup</h2>
+                    <span class="close" id="setup-close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="setup-section">
+                        <h3>Grid Size</h3>
+                        <div class="option-group">
+                            <label class="option-card">
+                                <input type="radio" name="grid-size" value="4" />
+                                <div class="option-content">
+                                    <div class="option-title">4×4</div>
+                                    <div class="option-desc">Quick game</div>
+                                </div>
+                            </label>
+                            <label class="option-card">
+                                <input type="radio" name="grid-size" value="6" />
+                                <div class="option-content">
+                                    <div class="option-title">6×6</div>
+                                    <div class="option-desc">Intermediate</div>
+                                </div>
+                            </label>
+                            <label class="option-card">
+                                <input type="radio" name="grid-size" value="9" checked />
+                                <div class="option-content">
+                                    <div class="option-title">9×9</div>
+                                    <div class="option-desc">Classic</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="setup-section">
+                        <h3>Difficulty</h3>
+                        <div class="option-group">
+                            <label class="option-card">
+                                <input type="radio" name="difficulty" value="1" />
+                                <div class="option-content">
+                                    <div class="option-title">Easy</div>
+                                </div>
+                            </label>
+                            <label class="option-card">
+                                <input type="radio" name="difficulty" value="2" />
+                                <div class="option-content">
+                                    <div class="option-title">Medium</div>
+                                </div>
+                            </label>
+                            <label class="option-card">
+                                <input type="radio" name="difficulty" value="3" checked />
+                                <div class="option-content">
+                                    <div class="option-title">Hard</div>
+                                </div>
+                            </label>
+                            <label class="option-card">
+                                <input type="radio" name="difficulty" value="4" />
+                                <div class="option-content">
+                                    <div class="option-title">Expert</div>
+                                </div>
+                            </label>
+                            <label class="option-card">
+                                <input type="radio" name="difficulty" value="5" />
+                                <div class="option-content">
+                                    <div class="option-title">Master</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button id="start-game" class="btn btn-primary btn-large">Start Game</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Settings</h2>
+                    <span class="close" id="settings-close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="setting-section">
+                        <h3>Gameplay</h3>
+                        <div class="setting-item">
+                            <label class="setting-label">
+                                <input type="checkbox" id="live-checking" />
+                                <span class="checkmark"></span>
+                                Live Error Checking
+                            </label>
+                            <p class="setting-desc">Highlight errors as you type</p>
+                        </div>
+                    </div>
+
+                    <div class="setting-section">
+                        <h3>Appearance</h3>
+                        <div class="setting-item">
+                            <label class="setting-label-text">Background Color</label>
+                            <div class="color-options">
+                                <label class="color-option">
+                                    <input type="radio" name="bg-color" value="gradient" checked />
+                                    <div class="color-preview gradient-preview"></div>
+                                    <span>Gradient</span>
+                                </label>
+                                <label class="color-option">
+                                    <input type="radio" name="bg-color" value="white" />
+                                    <div class="color-preview" style="background: white; border: 1px solid #ddd;"></div>
+                                    <span>White</span>
+                                </label>
+                                <label class="color-option">
+                                    <input type="radio" name="bg-color" value="dark" />
+                                    <div class="color-preview" style="background: #2c3e50;"></div>
+                                    <span>Dark</span>
+                                </label>
+                                <label class="color-option">
+                                    <input type="radio" name="bg-color" value="blue" />
+                                    <div class="color-preview" style="background: #3498db;"></div>
+                                    <span>Blue</span>
+                                </label>
+                                <label class="color-option">
+                                    <input type="radio" name="bg-color" value="green" />
+                                    <div class="color-preview" style="background: #27ae60;"></div>
+                                    <span>Green</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button id="save-settings" class="btn btn-primary btn-large">Save Settings</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scores Modal -->
+        <div id="scores-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Game Scores</h2>
+                    <span class="close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div id="scores-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Win Modal -->
+        <div id="win-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Congratulations!</h2>
+                </div>
+                <div class="modal-body">
+                    <p>You completed the puzzle!</p>
+                    <div id="win-stats"></div>
+                    <button id="play-again" class="btn btn-primary">Play Again</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="sudoku.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
