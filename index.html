@@ -25,14 +25,27 @@
                 <div class="difficulty-display"><span id="current-difficulty">9x9 - Hard</span></div>
             </div>
 
-            <div class="sudoku-container">
-                <div id="sudoku-grid" class="sudoku-grid"></div>
-            </div>
+            <div class="game-layout">
+                <div class="game-left">
+                    <div class="sudoku-container">
+                        <div id="sudoku-grid" class="sudoku-grid"></div>
+                    </div>
 
-            <div class="game-controls">
-                <button id="hint-btn" class="btn btn-hint">Hint</button>
-                <button id="check-btn" class="btn btn-check">Check</button>
-                <button id="solve-btn" class="btn btn-solve">Solve</button>
+                    <div class="game-controls">
+                        <button id="hint-btn" class="btn btn-hint">Hint</button>
+                        <button id="check-btn" class="btn btn-check">Check</button>
+                        <button id="solve-btn" class="btn btn-solve">Solve</button>
+                    </div>
+                </div>
+
+                <div class="game-right">
+                    <div class="number-pad">
+                        <div class="number-grid" id="number-grid">
+                            <!-- Numbers 1-9 -->
+                        </div>
+                        <button id="clear-btn" class="btn btn-clear">Clear</button>
+                    </div>
+                </div>
             </div>
         </main>
 
@@ -138,12 +151,12 @@
                             <label class="setting-label-text">Background Color</label>
                             <div class="color-options">
                                 <label class="color-option">
-                                    <input type="radio" name="bg-color" value="gradient" checked />
+                                    <input type="radio" name="bg-color" value="gradient" />
                                     <div class="color-preview gradient-preview"></div>
                                     <span>Gradient</span>
                                 </label>
                                 <label class="color-option">
-                                    <input type="radio" name="bg-color" value="white" />
+                                    <input type="radio" name="bg-color" value="white" checked />
                                     <div class="color-preview" style="background: white; border: 1px solid #ddd;"></div>
                                     <span>White</span>
                                 </label>

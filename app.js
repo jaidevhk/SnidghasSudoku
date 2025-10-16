@@ -14,13 +14,16 @@ class SudokuGame {
         // Settings
         this.settings = {
             liveChecking: false,
-            backgroundColor: 'gradient'
+            backgroundColor: 'white'
         };
         
         this.initializeElements();
         this.bindEvents();
         this.loadSettings();
         this.loadScores();
+        
+        // Create initial number pad
+        this.createNumberPad();
         
         // Try to restore previous game state first
         const gameRestored = this.loadGameState();
@@ -40,6 +43,11 @@ class SudokuGame {
         this.hintBtn = document.getElementById('hint-btn');
         this.checkBtn = document.getElementById('check-btn');
         this.solveBtn = document.getElementById('solve-btn');
+        
+        // Number pad elements
+        this.numberGrid = document.getElementById('number-grid');
+        this.clearBtn = document.getElementById('clear-btn');
+        this.selectedCell = null;
         
         // Settings
         this.settingsBtn = document.getElementById('settings-btn');
@@ -67,6 +75,9 @@ class SudokuGame {
         this.hintBtn.addEventListener('click', () => this.giveHint());
         this.checkBtn.addEventListener('click', () => this.checkSolution());
         this.solveBtn.addEventListener('click', () => this.solvePuzzle());
+        
+        // Number pad events
+        this.clearBtn.addEventListener('click', () => this.clearSelectedCell());
         
         this.startGameBtn.addEventListener('click', () => {
             const selectedDifficulty = document.querySelector('input[name="difficulty"]:checked');
@@ -110,12 +121,27 @@ class SudokuGame {
                 this.hideSettingsModal();
                 this.hideScoresModal();
                 this.hideWinModal();
+                this.deselectCell(); // Also deselect cell on Escape
+            }
+        });
+
+        // Click outside to deselect cell
+        document.addEventListener('click', (e) => {
+            // Check if click is outside the sudoku grid
+            if (!this.gridElement.contains(e.target) && 
+                !e.target.classList.contains('number-btn') &&
+                !e.target.classList.contains('btn-clear')) {
+                this.deselectCell();
             }
         });
     }
 
     newGame() {
+        // Stop any existing timer and reset
+        this.stopTimer();
+        this.startTime = null;
         this.hintsUsed = 0;
+        
         const { puzzle, solution } = this.generator.generatePuzzle(this.difficulty, this.gridSize);
         
         // Debug: Check if puzzle has any given numbers
@@ -144,6 +170,7 @@ class SudokuGame {
         }
         
         this.createGrid();
+        this.createNumberPad();
         this.startTimer();
         this.updateDifficultyDisplay();
         
@@ -211,43 +238,36 @@ class SudokuGame {
     }
 
     bindCellEvents(cell) {
+        // Disable keyboard input - only allow number pad
+        cell.addEventListener('keydown', (e) => {
+            // Allow navigation keys but prevent number input
+            if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab', 'Backspace', 'Delete'].includes(e.key)) {
+                e.preventDefault();
+            }
+        });
+        
         cell.addEventListener('input', (e) => {
-            const value = e.target.value;
-            const row = parseInt(e.target.dataset.row);
-            const col = parseInt(e.target.dataset.col);
-            
-            // Only allow numbers 1-gridSize or empty
-            const regex = new RegExp(`^[1-${this.gridSize}]$`);
-            if (value && (!regex.test(value))) {
-                e.target.value = '';
-                return;
-            }
-            
-            this.currentGrid[row][col] = value ? parseInt(value) : 0;
-            
-            // Save game state after each move
-            this.saveGameState();
-            
-            // Only validate if live checking is enabled
-            if (this.settings.liveChecking) {
-                this.validateCell(cell);
-            } else {
-                // Clear any existing error state
-                cell.classList.remove('error');
-            }
-            
-            // Check if puzzle is complete
-            if (this.isPuzzleComplete()) {
-                this.completePuzzle();
-            }
+            // Prevent any input - force use of number pad
+            e.preventDefault();
+            e.target.value = this.currentGrid[parseInt(e.target.dataset.row)][parseInt(e.target.dataset.col)] || '';
         });
 
         cell.addEventListener('focus', (e) => {
+            this.selectCell(e.target);
             this.highlightRelated(e.target);
         });
 
+        cell.addEventListener('click', (e) => {
+            this.selectCell(e.target);
+        });
+
         cell.addEventListener('blur', () => {
-            this.clearHighlights();
+            // Don't clear highlights immediately, let click events process first
+            setTimeout(() => {
+                if (!this.selectedCell) {
+                    this.clearHighlights();
+                }
+            }, 100);
         });
 
         // Allow arrow key navigation
@@ -806,6 +826,7 @@ class SudokuGame {
             
             // Create the grid with restored state
             this.createGrid();
+            this.createNumberPad();
             this.updateDifficultyDisplay();
             
             // Update timer display immediately
@@ -866,9 +887,160 @@ class SudokuGame {
             this.saveGameState();
         }
     }
+    
+    createNumberPad() {
+        console.log('Creating number pad...');
+        console.log('numberGrid element:', this.numberGrid);
+        
+        if (!this.numberGrid) {
+            console.error('numberGrid element not found!');
+            return;
+        }
+        
+        this.numberGrid.innerHTML = '';
+        
+        // Always create buttons 1-9
+        for (let i = 1; i <= 9; i++) {
+            const numberBtn = document.createElement('button');
+            numberBtn.className = 'number-btn';
+            numberBtn.textContent = i;
+            
+            console.log(`Creating button ${i}`);
+            
+            // Disable buttons that are not valid for current grid size
+            if (i > this.gridSize) {
+                numberBtn.classList.add('disabled');
+                numberBtn.disabled = true;
+                console.log(`Button ${i} disabled (grid size: ${this.gridSize})`);
+            } else {
+                numberBtn.addEventListener('click', () => this.inputNumber(i));
+                console.log(`Button ${i} enabled`);
+            }
+            
+            this.numberGrid.appendChild(numberBtn);
+        }
+        
+        console.log('Number pad created with', this.numberGrid.children.length, 'buttons');
+    }
+    
+    selectCell(cell) {
+        // Remove previous selection
+        if (this.selectedCell) {
+            this.selectedCell.classList.remove('selected');
+        }
+        
+        // Select new cell
+        this.selectedCell = cell;
+        cell.classList.add('selected');
+        
+        this.highlightRelated(cell);
+    }
+    
+    deselectCell() {
+        if (this.selectedCell) {
+            this.selectedCell.classList.remove('selected');
+            this.selectedCell = null;
+            this.clearHighlights();
+        }
+    }
+    
+    inputNumber(number) {
+        if (!this.selectedCell || this.selectedCell.classList.contains('given')) {
+            return;
+        }
+        
+        const row = parseInt(this.selectedCell.dataset.row);
+        const col = parseInt(this.selectedCell.dataset.col);
+        
+        // Validate input
+        const regex = new RegExp(`^[1-${this.gridSize}]$`);
+        if (!regex.test(number.toString())) {
+            return;
+        }
+        
+        // Set the value
+        this.selectedCell.value = number;
+        this.currentGrid[row][col] = number;
+        
+        // Save game state
+        this.saveGameState();
+        
+        // Validate if live checking is enabled
+        if (this.settings.liveChecking) {
+            this.validateCell(this.selectedCell);
+        } else {
+            this.selectedCell.classList.remove('error');
+        }
+        
+        // Check if puzzle is complete
+        if (this.isPuzzleComplete()) {
+            this.completePuzzle();
+        }
+        
+        // Move to next empty cell
+        this.moveToNextCell();
+    }
+    
+    clearSelectedCell() {
+        if (!this.selectedCell || this.selectedCell.classList.contains('given')) {
+            return;
+        }
+        
+        const row = parseInt(this.selectedCell.dataset.row);
+        const col = parseInt(this.selectedCell.dataset.col);
+        
+        this.selectedCell.value = '';
+        this.currentGrid[row][col] = 0;
+        this.selectedCell.classList.remove('error');
+        
+        this.saveGameState();
+    }
+    
+
+    
+    moveToNextCell() {
+        if (!this.selectedCell) return;
+        
+        const currentRow = parseInt(this.selectedCell.dataset.row);
+        const currentCol = parseInt(this.selectedCell.dataset.col);
+        
+        // Find next empty cell
+        for (let row = currentRow; row < this.gridSize; row++) {
+            const startCol = (row === currentRow) ? currentCol + 1 : 0;
+            for (let col = startCol; col < this.gridSize; col++) {
+                const cell = this.gridElement.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                if (cell && !cell.classList.contains('given') && !cell.value) {
+                    this.selectCell(cell);
+                    cell.focus();
+                    return;
+                }
+            }
+        }
+        
+        // If no empty cell found after current position, search from beginning
+        for (let row = 0; row <= currentRow; row++) {
+            const endCol = (row === currentRow) ? currentCol : this.gridSize;
+            for (let col = 0; col < endCol; col++) {
+                const cell = this.gridElement.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                if (cell && !cell.classList.contains('given') && !cell.value) {
+                    this.selectCell(cell);
+                    cell.focus();
+                    return;
+                }
+            }
+        }
+    }
 }
 
 // Initialize the game when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    new SudokuGame();
+    const game = new SudokuGame();
+    
+    // Force create number pad after a short delay to ensure DOM is ready
+    setTimeout(() => {
+        if (game.numberGrid && game.numberGrid.children.length === 0) {
+            console.log('Force creating number pad...');
+            game.createNumberPad();
+        }
+    }, 500);
 });
